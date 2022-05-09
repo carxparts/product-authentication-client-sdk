@@ -1,0 +1,48 @@
+{
+  "name": "@carxparts/product-authentication-client",
+  "version": "0.0.0",
+  "description": "Test",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --coverage",
+    "webpack": "webpack",
+    "example:verify": "node ./example/verify.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rafat97/npm-single-package-template.git"
+  },
+  "keywords": [
+    "hello",
+    "world",
+    "Hello World",
+    "typescript",
+    "module"
+  ],
+  "author": "rafat97",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rafat97/npm-single-package-template/issues"
+  },
+  "homepage": "https://github.com/Rafat97/npm-single-package-template#readme",
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "supertest": "^6.2.2",
+    "ts-jest": "^27.1.4",
+    "ts-loader": "^9.3.0",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "axios": "^0.27.2"
+  }
+}

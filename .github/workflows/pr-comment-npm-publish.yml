@@ -1,0 +1,135 @@
+name: On Comment `/npm_publish` PR Node.js Package Publish CI
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  package_publish:
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/npm_publish'}}
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: 16
+      VERSION_TYPE: prerelease
+      NPM_REG_URL: https://registry.npmjs.org/
+      NPM_REG_ACC_TOK: ${{ secrets.NPM_REG_ACC_TOK }}
+      PR_NUMBER: ${{ github.event.number }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PACKAGE_PRE_ID: pr-${{ github.event.number }}
+      USER_EMAIL: rafathaque1997@gmail.com
+      USER_NAME: Rafat97
+
+    steps:
+      - name: Variables
+        run: |
+          echo "Node Version ${{ env.NODE_VERSION }}"
+          echo "NPM Registey url ${{ env.NPM_REG_URL }}"
+          echo "Version type ${{ env.VERSION_TYPE }}"
+          echo "PR Number ${{ env.PR_NUMBER }}"
+          echo "Package preid ${{ env.PACKAGE_PRE_ID }}"
+      - name: Git Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: ${{ env.NPM_REG_URL }}
+
+      - name: Npm Package Install
+        run: npm install
+
+      - name: Npm Run Test
+        run: npm test
+
+      - name: Npm Package Build
+        run: |
+          echo "Compiling TypeScript"
+          npm run build
+
+      - name: Branch & Short SHA
+        id: brnh_s_sha
+        run: |
+          CURRENT_SHORT_SHA=$(git rev-parse --short HEAD)
+          CURRENT_BRANCH=$(echo ${GITHUB_REF#refs/heads/})
+          echo ::set-output name=sha_short::$CURRENT_SHORT_SHA
+          echo ::set-output name=branch_name::$CURRENT_BRANCH
+      - name: Version Change to Prerelease
+        run: |
+          echo "Version type prerelease"
+          npm version prerelease --preid ${{ env.PACKAGE_PRE_ID }}-${{steps.brnh_s_sha.outputs.sha_short}} -m "Upgrade to %s " --no-git-tag-version
+
+      - name: package.json Information
+        id: pk_version
+        run: |
+          PACKAGE_JSON_PATH="${1-.}"
+          echo "Reading package.json from ${PACKAGE_JSON_PATH}/package.json"
+          PACKAGE_VERSION=$(cat ${PACKAGE_JSON_PATH}/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+          PACKAGE_NAME=$(node -e "console.log(require('./package.json')['name'])")
+          echo ::set-output name=current-version::$PACKAGE_VERSION
+          echo ::set-output name=current-package-name::$PACKAGE_NAME
+      - name: Version & Package Name
+        run: |
+          echo "${{ steps.pk_version.outputs.current-version  }}"
+          echo "${{ steps.pk_version.outputs.current-package-name  }}"
+
+      - name: Npm publish prerelease
+        run: |
+          git config --global user.email ${{env.USER_EMAIL}}
+          git config --global user.name  ${{env.USER_NAME}}
+          echo "Publishing ${{ steps.pk_version.outputs.current-package-name  }}@{{ steps.pk_version.outputs.current-version  }}"
+          ls -la
+          echo "Start Publishing"
+          npm publish --tag ${{ env.PACKAGE_PRE_ID }}
+          echo "Start taging"
+          npm dist-tag add ${{steps.pk_version.outputs.current-package-name}}@${{steps.pk_version.outputs.current-version  }} ${{ env.PACKAGE_PRE_ID }}
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_REG_ACC_TOK }}
+
+      - name: Comment
+        uses: actions/github-script@v6
+        env:
+          DEPLOYED_PACKAGE_NAME: ${{ steps.pk_version.outputs.current-package-name  }}
+          DEPLOYED_PACKAGE_VERSION: ${{ steps.pk_version.outputs.current-version  }}
+          CODE_LATEST_COMMIT: ${{steps.brnh_s_sha.outputs.sha_short }}
+        with:
+          script: |
+            const prid = context.issue.number;
+            const pac_name = process.env.DEPLOYED_PACKAGE_NAME;
+            const pac_version = process.env.DEPLOYED_PACKAGE_VERSION;
+            const latest_commit = process.env.CODE_LATEST_COMMIT;
+
+            console.log(context)
+
+            github.rest.issues.createComment({
+            issue_number: prid,
+            owner: 'rafat97',
+            repo: context.repo.repo,
+            body: `
+            ## Deploying with Automation Action
+
+
+            <table>
+            <tr>
+            <td><strong>Latest Commit</strong> </td>
+            <td><code> ${latest_commit} </code></td>
+            </tr>
+            <tr>
+            <td><strong>Package Version</strong> </td>
+            <td><code> ${pac_version} </code></td>
+            </tr>
+             <tr>
+            <td><strong>Install Package</strong> </td>
+            <td><code> npm install ${pac_name}@${pac_version} </code></td>
+            </tr>
+            </table>
+
+
+            [Package Link](https://www.npmjs.com/package/@rafat97/hello-world/v/${pac_version})
+            `
+            })
+      - name: End
+        run: |
+          echo "Package published successfully. "
+          echo "Package `dist-tag` is ${{ steps.pk_version.outputs.current-package-name  }}@{{ steps.pk_version.outputs.current-version  }}"
+          echo "Thank you for giving the PR"
