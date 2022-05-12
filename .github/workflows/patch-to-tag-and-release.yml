@@ -1,0 +1,124 @@
+name: Options Node.js Package Create Tag and Release patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        required: true
+        type: choice
+        default: patch
+        description: How to increment the version?
+        options:
+          - major
+          - minor
+          - patch
+          - patch-prerelease-beta
+      npm_registry_api_key:
+        required: true
+        description: Give Npm Package Registry Access Token
+
+jobs:
+  build-version-patch:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_TYPE: ${{github.event.inputs.version_type}}
+      NPM_REG_ACC_TOK: ${{github.event.inputs.npm_registry_api_key}}
+    steps:
+      - name: Send greeting
+        run: |
+          echo "Version type ${{ env.VERSION_TYPE }}"
+
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+
+      - run: npm install
+      - run: npm test
+      - name: TypeScript Build
+        run: |
+          echo "Compiling TypeScript"
+          npm run build
+
+      - if: ${{ env.VERSION_TYPE == 'patch-prerelease-beta' }}
+        name: Version Change to Prerelease
+        run: |
+          echo "Version type  ${{ env.VERSION_TYPE }}"
+          npm version prerelease --preid beta -m "Upgrade to %s " --no-git-tag-version
+
+      - if: ${{ env.VERSION_TYPE != 'patch-prerelease-beta' }}
+        name: Version Change to patch, major, minor
+        run: |
+          echo "Version type ${{ env.VERSION_TYPE }}"
+          npm version ${{ env.VERSION_TYPE }} -m "Upgrade to %s " --no-git-tag-version
+
+      - name: package.json Information
+        id: pk_version
+        run: |
+          PACKAGE_JSON_PATH="${1-.}"
+          echo "Reading package.json from ${PACKAGE_JSON_PATH}/package.json"
+          PACKAGE_VERSION=$(cat ${PACKAGE_JSON_PATH}/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+          PACKAGE_NAME=$(node -e "console.log(require('./package.json')['name'])")
+          echo ::set-output name=current-version::$PACKAGE_VERSION
+          echo ::set-output name=current-package-name::$PACKAGE_NAME
+
+      - name: Version & Package Name
+        run: |
+          echo "${{ steps.pk_version.outputs.current-version  }}"
+          echo "${{ steps.pk_version.outputs.current-package-name  }}"
+
+      - if: ${{ env.VERSION_TYPE == 'patch-prerelease-beta' }}
+        name: Npm publish prerelease
+        run: |
+          echo "Publishing ${{ steps.pk_version.outputs.current-package-name  }}@{{ steps.pk_version.outputs.current-version  }}"
+          ls -la
+          npm publish --tag beta
+          npm dist-tag add ${{steps.pk_version.outputs.current-package-name}}@${{steps.pk_version.outputs.current-version  }} beta
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_REG_ACC_TOK }}
+
+      - if: ${{ github.event.inputs.version_type != 'patch-prerelease-beta' }}
+        name: Npm publish patch, major, minor
+        run: |
+          echo "Publishing ${{ steps.pk_version.outputs.current-package-name  }}@{{ steps.pk_version.outputs.current-version  }}"
+          ls -la
+          npm publish --tag latest
+          npm dist-tag add ${{steps.pk_version.outputs.current-package-name}}@${{steps.pk_version.outputs.current-version  }} latest
+        env:
+          NODE_AUTH_TOKEN: ${{ env.NPM_REG_ACC_TOK }}
+
+      - name: Update version in package.json
+        run: |
+          git config --global user.email "rafathaque1997@gmail.com"
+          git config --global user.name "rafat97"
+          git status
+          git add .
+          git commit -m "feat: ${{ steps.pk_version.outputs.current-version  }} version was released"
+          git push --force
+
+      #- name: GIT Push
+      #   uses: stefanzweifel/git-auto-commit-action@v4
+      #    with:
+      #     commit_message: 🤖 project version update Update by ${{ github.actor }} bot
+      #  commit_user_name: rafat97bot
+      #   commit_user_email: rafathaque.bot@gmail.com
+      # commit_author: Rafat97[BOT] <rafathaque.bot@gmail.com>
+
+      # - run: npm publish
+      #   env:
+      #    NODE_AUTH_TOKEN: "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"
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: "patch"
+          custom_tag: ${{ steps.pk_version.outputs.current-version  }}
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
