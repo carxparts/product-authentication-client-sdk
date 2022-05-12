@@ -10,8 +10,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest --coverage",
+    "test": "npm run clear_jest && jest --coverage",
     "webpack": "webpack",
+    "clear_jest": "jest --clearCache",
     "example:verify": "node ./example/verify.js"
   },
   "repository": {

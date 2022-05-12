@@ -1,5 +1,1 @@
-const hello = () => {
-  console.log("Hello World");
-  return "Hello World";
-};
-export { hello };
+export  * from './ProductAuthentication '
