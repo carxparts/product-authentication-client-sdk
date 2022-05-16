@@ -1,4 +1,4 @@
-name: On Comment `/npm_publish` PR Node.js Package Publish CI 
+name: On Comment `\npm_publish` PR Node.js Package Publish CI 
 
 on:
   issue_comment:
@@ -52,9 +52,6 @@ jobs:
       - name: Npm Package Install
         run: npm install
 
-      - name: Npm Run Test
-        run: npm test
-
       - name: Npm Package Build
         run: |
           echo "Compiling TypeScript"
@@ -67,6 +64,7 @@ jobs:
           CURRENT_BRANCH=$(echo ${GITHUB_REF#refs/heads/})
           echo ::set-output name=sha_short::$CURRENT_SHORT_SHA
           echo ::set-output name=branch_name::$CURRENT_BRANCH
+          
       - name: Version Change to Prerelease
         run: |
           echo "Version type prerelease"
