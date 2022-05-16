@@ -1,36 +1,49 @@
-name: On Comment `/npm_publish` PR Node.js Package Publish CI
+name: On Comment `/npm_publish` PR Node.js Package Publish CI 
 
 on:
   issue_comment:
     types:
-      - created
-
+    - created
+    
 jobs:
   package_publish:
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == '/npm_publish'}}
+    if: ${{ github.event.issue.pull_request && github.event.comment.body == '\npm_publish'}}
     runs-on: ubuntu-latest
     env:
       NODE_VERSION: 16
-      VERSION_TYPE: prerelease
+      VERSION_TYPE: prerelase
       NPM_REG_URL: https://registry.npmjs.org/
       NPM_REG_ACC_TOK: ${{ secrets.NPM_REG_ACC_TOK }}
-      PR_NUMBER: ${{ github.event.number }}
+      PR_NUMBER: ${{ github.event.issue.number }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PACKAGE_PRE_ID: pr-${{ github.event.number }}
+      PACKAGE_PRE_ID: pr-${{ github.event.issue.number }}
       USER_EMAIL: rafathaque1997@gmail.com
       USER_NAME: Rafat97
-
+      
     steps:
-      - name: Variables
+      - name: Variables 
         run: |
           echo "Node Version ${{ env.NODE_VERSION }}"
           echo "NPM Registey url ${{ env.NPM_REG_URL }}"
           echo "Version type ${{ env.VERSION_TYPE }}"
           echo "PR Number ${{ env.PR_NUMBER }}"
           echo "Package preid ${{ env.PACKAGE_PRE_ID }}"
+          
       - name: Git Checkout
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v3  
+        
+      - name: Checkout Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_NUM=${PR_URL##*/}
+          echo "Checking out from PR #$PR_NUM based on URL: $PR_URL"
+          hub pr checkout $PR_NUM
+        
+      - name: See the branches 
+        run: git branch
+        
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -46,7 +59,7 @@ jobs:
         run: |
           echo "Compiling TypeScript"
           npm run build
-
+          
       - name: Branch & Short SHA
         id: brnh_s_sha
         run: |
@@ -58,7 +71,7 @@ jobs:
         run: |
           echo "Version type prerelease"
           npm version prerelease --preid ${{ env.PACKAGE_PRE_ID }}-${{steps.brnh_s_sha.outputs.sha_short}} -m "Upgrade to %s " --no-git-tag-version
-
+      
       - name: package.json Information
         id: pk_version
         run: |
@@ -67,11 +80,12 @@ jobs:
           PACKAGE_VERSION=$(cat ${PACKAGE_JSON_PATH}/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
           PACKAGE_NAME=$(node -e "console.log(require('./package.json')['name'])")
           echo ::set-output name=current-version::$PACKAGE_VERSION
-          echo ::set-output name=current-package-name::$PACKAGE_NAME
+          echo ::set-output name=current-package-name::$PACKAGE_NAME     
       - name: Version & Package Name
         run: |
           echo "${{ steps.pk_version.outputs.current-version  }}"
           echo "${{ steps.pk_version.outputs.current-package-name  }}"
+      
 
       - name: Npm publish prerelease
         run: |
@@ -98,17 +112,17 @@ jobs:
             const pac_name = process.env.DEPLOYED_PACKAGE_NAME;
             const pac_version = process.env.DEPLOYED_PACKAGE_VERSION;
             const latest_commit = process.env.CODE_LATEST_COMMIT;
-
+            
             console.log(context)
-
+            
             github.rest.issues.createComment({
             issue_number: prid,
             owner: 'rafat97',
             repo: context.repo.repo,
             body: `
             ## Deploying with Automation Action
-
-
+            
+            
             <table>
             <tr>
             <td><strong>Latest Commit</strong> </td>
@@ -123,8 +137,8 @@ jobs:
             <td><code> npm install ${pac_name}@${pac_version} </code></td>
             </tr>
             </table>
-
-
+            
+            
             [Package Link](https://www.npmjs.com/package/@rafat97/hello-world/v/${pac_version})
             `
             })
