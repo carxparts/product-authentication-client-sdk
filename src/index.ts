@@ -1,1 +1,1 @@
-export  * from './ProductAuthentication '
+export * from "./ProductAuthentication";

@@ -15,6 +15,9 @@ packages/**/cjs/
 .idea
 *.log
 .npm/
+.editorconfig
+.babelrc
+gulpfile.js
 packages/**/cypress/videos/
 yarn.lock
 package-lock.json

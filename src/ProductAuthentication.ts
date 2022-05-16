@@ -37,14 +37,41 @@ export interface IProductAuthenticationVerifyReturnData {
   data: {};
 }
 
-export interface IProductAuthentication {
+/**
+ * IProductAuthenticationCreate interface
+ *
+ * @type interface
+ */
+export interface IProductAuthenticationCreate {
   create(
     data: IProductAuthenticationCreateData
   ): Promise<IProductAuthenticationVerifyReturnData>;
+}
+
+/**
+ * IProductAuthenticationVerify interface
+ *
+ * @type interface
+ */
+export interface IProductAuthenticationVerify {
   verify(productId: string): Promise<IProductAuthenticationVerifyReturnData>;
 }
 
-export class ProductAuthentication implements IProductAuthentication {
+/**
+ * ProductAuthentication class
+ *
+ * This is the main class for the ProductAuthentication module.
+ * The main responsibility of this class is to -
+ *  1. create API handler
+ *  2. verify API handler
+ *
+ * @type class
+ *
+ * @param {IProductAuthenticationOptions} options
+ */
+export class ProductAuthentication
+  implements IProductAuthenticationCreate, IProductAuthenticationVerify
+{
   private options: IProductAuthenticationOptions;
 
   constructor(options: IProductAuthenticationOptions) {
@@ -53,22 +80,47 @@ export class ProductAuthentication implements IProductAuthentication {
     Object.setPrototypeOf(this, ProductAuthentication.prototype);
   }
 
+  /**
+   * Getting `Verify` endpoint url
+   *
+   * @param  username  name of the user
+   * @param  productId id/sku of the product
+   * @returns string
+   *
+   * */
   private getVerifyUrl = (username: string, productId: string): string => {
     const url = this.options.baseUrl.replace(/\/$/, "");
     return `${url}/v1/product/authentication/verify/${username}/${productId}`;
   };
 
+  /**
+   * Getting `Create` endpoint url
+   *
+   * @returns string
+   *
+   * */
   private getCreateUrl = (): string => {
     const url = this.options.baseUrl.replace(/\/$/, "");
     return `${url}/v1/product/authentication/create`;
   };
 
+  /**
+   * Validate options User Name is empty or not
+   *
+   * @returns void or throws error
+   */
   private validateUsernameOptions = (): void => {
     if (!this.options.userName) {
       throw new Error("User Name is required");
     }
   };
 
+  /**
+   * Validate url
+   *
+   * @param url string
+   * @returns boolean
+   */
   private validURL = (str: string) => {
     var pattern = new RegExp(
       "^(https?:\\/\\/)" + // protocol
@@ -82,6 +134,11 @@ export class ProductAuthentication implements IProductAuthentication {
     return !!pattern.test(str);
   };
 
+  /**
+   * Validate options baseUrl is empty or not
+   *
+   * @returns void or throws error
+   */
   private validateBaseUrlOptions = (): void => {
     if (!this.options.baseUrl) {
       throw new Error("Base Url is required");
@@ -93,12 +150,22 @@ export class ProductAuthentication implements IProductAuthentication {
     }
   };
 
+  /**
+   * Validate options api key is empty or not
+   *
+   * @returns void or throws error
+   */
   private validateApiKeyOptions = (): void => {
     if (!this.options.apiKey) {
       throw new Error("Api key is required");
     }
   };
 
+  /**
+   * Api Calling
+   *
+   * @returns Promise
+   */
   private apiCalling = async (
     axiosConfig: AxiosRequestConfig<any>
   ): Promise<any> => {
@@ -106,6 +173,12 @@ export class ProductAuthentication implements IProductAuthentication {
     return fetchData;
   };
 
+  /**
+   * Handling error message based on the error code
+   *
+   * @param errorCode number
+   * @returns string
+   * */
   private ErrorHandler = (errorCode: number): string => {
     if (errorCode === 101) {
       return "Product is not genuine";
@@ -115,6 +188,12 @@ export class ProductAuthentication implements IProductAuthentication {
     return "Unknown error";
   };
 
+  /**
+   * The responsibility of this function is to verify product
+   *
+   * @param productId string
+   * @returns Promise
+   * */
   public verify = async (
     productId: string
   ): Promise<IProductAuthenticationVerifyReturnData> => {
@@ -139,11 +218,15 @@ export class ProductAuthentication implements IProductAuthentication {
       };
       // calling api
       const fetchData = await this.apiCalling(axiosConfig);
+
+      // return data
       returnData.message = "Product is genuine";
       returnData.data = fetchData.data;
       returnData.success = true;
     } catch (error: any) {
       returnData.success = false;
+
+      // check is error type is AxiosError
       if (error instanceof AxiosError) {
         const { response } = error;
         if (response?.data) {
@@ -161,6 +244,12 @@ export class ProductAuthentication implements IProductAuthentication {
     return returnData;
   };
 
+  /**
+   * The responsibility of this function is to create a product
+   *
+   * @param userInput IProductAuthenticationCreateData
+   * @returns Promise
+   * */
   public create = async (
     userInput: IProductAuthenticationCreateData
   ): Promise<IProductAuthenticationVerifyReturnData> => {
