@@ -1,7 +1,7 @@
 {
   "name": "@carxparts/product-authentication-client",
   "version": "0.0.0",
-  "description": "Test",
+  "description": "Client SDK is for vendors who are our customers and want to integrate Product Authentication into their own websites",
   "main": "./lib/js/index.js",
   "module": "./lib/js/index.js",
   "types": "./lib/d_ts/index.d.ts",
