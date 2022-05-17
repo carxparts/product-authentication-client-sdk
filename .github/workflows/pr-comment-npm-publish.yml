@@ -115,7 +115,7 @@ jobs:
             
             github.rest.issues.createComment({
             issue_number: prid,
-            owner: 'rafat97',
+            owner: 'carxparts',
             repo: context.repo.repo,
             body: `
             ## Deploying with Automation Action
