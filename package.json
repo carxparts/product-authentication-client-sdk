@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rafat97/npm-single-package-template.git"
+    "url": "git+https://github.com/carxparts/product-authentication-client-sdk.git"
   },
   "keywords": [
     "hello",
@@ -28,9 +28,9 @@
   "author": "rafat97",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Rafat97/npm-single-package-template/issues"
+    "url": "https://github.com/carxparts/product-authentication-client-sdk/issues"
   },
-  "homepage": "https://github.com/Rafat97/npm-single-package-template#readme",
+  "homepage": "https://github.com/carxparts/product-authentication-client-sdk#readme",
   "devDependencies": {
     "@babel/core": "^7.17.10",
     "@babel/preset-env": "^7.17.10",
