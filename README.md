@@ -1,6 +1,12 @@
 # Introduction
 
-Product authentication client package for verifying the authorized product
+Product Authentication is a service offered by Carxparts which helps vendors verify products (for e.g., car parts) in their inventory. 
+
+This is how Product Authentication works:
+1. User scans a QR code on their device.
+2. The QR code opens a website, which shows if the product is authentic or not.
+
+This open source client SDK is for vendors who are our customers and want to integrate Product Authentication into their own websites.
 
 # How to install
 
@@ -10,7 +16,7 @@ or
 yarn add @carxparts/product-authentication-client
 ```
 
-# Example
+# Examples
 
 ## CommonJS/ES6 Uses
 
