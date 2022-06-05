@@ -1,0 +1,20 @@
+{
+  "name": "write-data",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bulk_create": "node ./index_create.mjs",
+    "bulk_verify": "node ./index_verify.mjs",
+    "generate_qrcode": "node ./generate_qrcode.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@carxparts/product-authentication-client": "0.0.1-pr-2-26928f2.0",
+    "canvas": "^2.9.1",
+    "node-xlsx": "^0.21.0",
+    "qrcode": "^1.5.0"
+  }
+}
