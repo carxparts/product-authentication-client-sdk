@@ -26,6 +26,22 @@ export interface IProductAuthenticationCreateData {
   };
 }
 
+
+/**
+ * ProductAuthentication update data blueprint
+ *
+ * @type interface
+ */
+export interface IProductAuthenticationUpdateData {
+  id: string;
+  metadata?: {};
+  verificationOptions?: {
+    min?: number;
+    max?: number;
+    current?: number;
+  };
+}
+
 /**
  * ProductAuthentication response data blueprint
  *
@@ -44,6 +60,17 @@ export interface IProductAuthenticationVerifyReturnData {
  */
 export interface IProductAuthenticationCreate {
   create(
+    data: IProductAuthenticationCreateData
+  ): Promise<IProductAuthenticationVerifyReturnData>;
+}
+
+/**
+ * IProductAuthenticationUpdate interface
+ *
+ * @type interface
+ */
+ export interface IProductAuthenticationUpdate {
+  update(
     data: IProductAuthenticationCreateData
   ): Promise<IProductAuthenticationVerifyReturnData>;
 }
@@ -70,7 +97,7 @@ export interface IProductAuthenticationVerify {
  * @param {IProductAuthenticationOptions} options
  */
 export class ProductAuthentication
-  implements IProductAuthenticationCreate, IProductAuthenticationVerify
+  implements IProductAuthenticationCreate, IProductAuthenticationVerify, IProductAuthenticationUpdate
 {
   private options: IProductAuthenticationOptions;
 
@@ -102,6 +129,17 @@ export class ProductAuthentication
   private getCreateUrl = (): string => {
     const url = this.options.baseUrl.replace(/\/$/, "");
     return `${url}/v1/product/authentication/create`;
+  };
+
+  /**
+   * Getting `Update` endpoint url
+   *
+   * @returns string
+   *
+   * */
+  private getUpdateUrl = (): string => {
+    const url = this.options.baseUrl.replace(/\/$/, "");
+    return `${url}/v1/product/authentication/update`;
   };
 
   /**
@@ -289,4 +327,45 @@ export class ProductAuthentication
 
     return returnData;
   };
+
+  public update = async (
+    userInput: IProductAuthenticationUpdateData
+  ): Promise<IProductAuthenticationVerifyReturnData> => {
+    this.validateApiKeyOptions(); // validate api key
+    const getUrl = this.getUpdateUrl(); // get create url
+    let returnData: IProductAuthenticationVerifyReturnData = {
+      success: true,
+      message: "",
+      data: {},
+    };
+
+    try {
+      const data = JSON.stringify({ ...userInput });
+      const axiosConfig = {
+        method: "post",
+        url: getUrl,
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.options.apiKey as string,
+        },
+        data: data,
+      };
+      // calling api
+      const fetchData = await axios(axiosConfig);
+      returnData.message = fetchData.data.message;
+      returnData.data = fetchData.data;
+      returnData.success = true;
+    } catch (error) {
+      returnData.success = false;
+      if (error instanceof AxiosError) {
+        const { response } = error;
+        returnData.message = response?.data?.message;
+      } else {
+        returnData.message = "Unknown error";
+      }
+    }
+
+    return returnData;
+  };
+
 }

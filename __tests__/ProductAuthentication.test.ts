@@ -5,6 +5,20 @@ const BASE_URL = "";
 const USERNAME = "";
 const API_KEY = "";
 
+
+beforeAll(async () => {
+   if(BASE_URL === ""){
+    throw new Error("Required BASE_URL");
+   }
+   if(USERNAME === ""){
+    throw new Error("Required USERNAME");
+   }
+   if(API_KEY === ""){
+    throw new Error("Required API_KEY");
+   }
+});
+
+
 describe("ProductAuthentication", () => {
   it("should be defined", () => {
     expect(ProductAuthentication).toBeDefined();
@@ -206,5 +220,60 @@ describe("ProductAuthentication", () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toBe("Product verification maximum limit reached");
+  });
+
+  it("should not update because product id no correct", async () => {
+    const option = {
+      baseUrl: BASE_URL,
+      apiKey: API_KEY,
+    };
+
+    const updatedData = {
+      id: "3fa85f64-5717-4562-b3fc-2c963f66afa",
+      verificationOptions: {
+        max: 500,
+      },
+    };
+
+    const productAuthenticationDefinition = new ProductAuthentication(option);
+    const result = await productAuthenticationDefinition.update(updatedData);
+    console.log(result);
+
+    // sample output
+    // {
+    //   success: true,
+    //   message: 'Product created successfully',
+    //   data: { message: 'Created successfully' }
+    // }
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("PRODUCT_NOT_FOUND");
+  });
+
+  it("should update product max value", async () => {
+    const option = {
+      baseUrl: BASE_URL,
+      apiKey: API_KEY,
+    };
+
+    const updatedData = {
+      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      verificationOptions: {
+        max: 500,
+      },
+    };
+
+    const productAuthenticationDefinition = new ProductAuthentication(option);
+    const result = await productAuthenticationDefinition.update(updatedData);
+
+    // sample output
+    // {
+    //   success: true,
+    //   message: 'Product created successfully',
+    //   data: { message: 'Created successfully' }
+    // }
+
+    expect(result.success).toBe(true);
+    expect(result.message).toBe("SUCCESS UPDATED OPTIONS");
   });
 });
