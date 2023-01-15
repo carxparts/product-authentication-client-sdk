@@ -66,6 +66,12 @@ const {
         console.log("response", response);
       })
       .catch((error) => {
+        const data = error;
+        if (data?.data?.errorCode === 101) {
+          console.error("PRODUCT_IS_NOT_AUTHENTICATED_STATE");
+        } else if (data?.data?.errorCode === 102) {
+          console.error("PRODUCT_IS_AUTHENTICATED_BUT_MAX_LIMIT_REACHED_STATE");
+        }
         console.error("catch error", error);
       });
   </script>
