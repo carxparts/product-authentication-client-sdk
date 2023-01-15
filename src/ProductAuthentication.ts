@@ -35,6 +35,7 @@ export interface IProductAuthenticationVerifyReturnData {
   message: string;
   success: boolean;
   data: {};
+  error?: any;
 }
 
 /**
@@ -225,16 +226,25 @@ export class ProductAuthentication
       returnData.success = true;
     } catch (error: any) {
       returnData.success = false;
-
+      returnData.error = error;
       // check is error type is AxiosError
       if (error instanceof AxiosError) {
         const { response } = error;
+        returnData.data = response?.data;
         if (response?.data) {
           returnData.message = this.ErrorHandler(response?.data?.errorCode);
         } else {
-          returnData.message = error?.message;
+          if (error.code === "ERR_NETWORK") {
+            returnData.message = error?.message;
+            returnData.data = {
+              errorCode: error.code,
+              message: error.message,
+              name: error.name,
+            };
+          } else {
+            returnData.message = error?.message;
+          }
         }
-        returnData.data = response?.data;
       } else {
         returnData.message = error?.message;
         returnData.data = {};
