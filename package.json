@@ -19,11 +19,9 @@
     "url": "git+https://github.com/carxparts/product-authentication-client-sdk.git"
   },
   "keywords": [
-    "hello",
-    "world",
-    "Hello World",
+    "carxparts",
+    "cxp",
     "typescript",
-    "module"
   ],
   "author": "rafat97",
   "license": "ISC",
